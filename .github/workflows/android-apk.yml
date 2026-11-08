@@ -1,9 +1,11 @@
 name: Export Android Debug APK
 
+
 on:
   push:
     branches: [ "main", "master" ]
   workflow_dispatch:
+
 
 jobs:
   export:
@@ -12,9 +14,11 @@ jobs:
       GODOT_VERSION: "4.3"
       GODOT_RELEASE_TYPE: "stable"
 
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
 
       - name: Set up Java JDK 17
         uses: actions/setup-java@v4
@@ -22,14 +26,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: 'platforms;android-33 build-tools;33.0.2 platform-tools'
 
+
       - name: Generate Debug Keystore
         run: |
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
 
       - name: Unzip project archive
         run: |
@@ -37,12 +44,14 @@ jobs:
           PROJECT_DIR=$(find extracted_project -name "project.godot" -exec dirname {} \;)
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
+
       - name: Download and setup Godot Engine
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE_TYPE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE_TYPE}_linux.x86_64.zip
           unzip -q Godot_v${GODOT_VERSION}-${GODOT_RELEASE_TYPE}_linux.x86_64.zip
           mv Godot_v${GODOT_VERSION}-${GODOT_RELEASE_TYPE}_linux.x86_64 godot
           chmod +x godot
+
 
       - name: Download and setup Godot Export Templates
         run: |
@@ -52,16 +61,20 @@ jobs:
           mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE_TYPE}/
           rm -rf templates Godot_v${GODOT_VERSION}-${GODOT_RELEASE_TYPE}_export_templates.tpz
 
+
       - name: Prepare build directory
         run: |
           mkdir -p build/android
 
+
       - name: Export Android Debug APK
         run: |
-          ./godot --headless --path "${{ env.PROJECT_DIR }}" --export-debug "Android" $(pwd)/build/android/SurtoZero-debug.apk
+          ./godot --headless --path "${{ env.PROJECT_DIR }}" --export-debug "Android Debug" $(pwd)/build/android/SurtoZero-debug.apk
+
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: SurtoZero-Android-Debug-APK
           path: build/android/SurtoZero-debug.apk
+
